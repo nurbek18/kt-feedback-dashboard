@@ -4,23 +4,22 @@ Interactive HTML dashboard for **external** (public reviews) and **internal** (c
 
 ## Live demo
 
-`https://nurbek18.github.io/kt-feedback-dashboard/`
+**https://nurbek18.github.io/kt-feedback-dashboard/**
 
 ## Features
 
-- Filter by source, platform, region, sentiment, CRM category, and month range
-- KPI cards, sentiment charts, platform/region breakdowns, category table
-- External vs internal comparison
-- Dark theme; data embedded in `index.html`
+- **Time dimensions:** year, period (month), date
+- **Heatmaps:** weekday × hour, date × hour (internal timestamps)
+- **Splits:** by source, platform, city
+- **All charts:** Total, Positive, Negative
+- **Top 5 categories:** separate rankings for positive and negative
+- Global filters: source, platform, city
 
-## Regenerate locally
-
-From the parent project:
+## Regenerate
 
 ```bash
-python pilot/scripts/build_dashboard_agg.py
-python pilot/scripts/compress_dashboard_agg.py
-python pilot/scripts/generate_feedback_html_dashboard.py
+python pilot/scripts/build_dashboard_agg_v2.py
+python pilot/scripts/generate_feedback_html_dashboard_v2.py
 ```
 
 ## Data scope
@@ -29,3 +28,5 @@ python pilot/scripts/generate_feedback_html_dashboard.py
 |--------|---------|
 | External | ~30,189 |
 | Internal | ~1,904,198 |
+
+Note: hour-level heatmaps use internal `start_at` timestamps; external reviews are date-only.
