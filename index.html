@@ -258,6 +258,21 @@
       padding: 6px 8px; border-radius: 8px; white-space: nowrap; font-size: .7rem;
       pointer-events: none;
     }
+    .hm-legend {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px;
+      margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid var(--border); background: var(--surface);
+    }
+    .hm-legend-title {
+      font-size: .75rem; font-weight: 700; color: var(--muted); margin-right: 4px;
+    }
+    .hm-legend-item {
+      display: flex; align-items: center; gap: 6px; font-size: .72rem; color: var(--muted);
+    }
+    .hm-legend-swatch {
+      width: 22px; height: 14px; border-radius: 4px;
+      border: 1px solid rgba(15,23,42,.08); flex-shrink: 0;
+    }
     .note { color: var(--muted); font-size: .8rem; margin-top: 10px; }
 
     .top-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -426,6 +441,7 @@
                 </select>
               </div>
               <div class="heatmap-wrap"><div class="heatmap" id="heatmap"></div></div>
+              <div class="hm-legend" id="hmLegend"></div>
               <p class="note" id="hmNote"></p>
             </div>
             <div class="card">
@@ -693,6 +709,35 @@
       }, options: chartOpts(false, 15) });
     }
 
+    function hmColor(metric, alpha) {
+      return metric === "pos" ? `rgba(16,185,129,${alpha})` : metric === "neg" ? `rgba(239,68,68,${alpha})` : `rgba(37,99,235,${alpha})`;
+    }
+
+    function hmLegendRanges(max, steps = 5) {
+      const ranges = [{ lo: 0, hi: 0 }];
+      if (!max) return ranges;
+      for (let i = 0; i < steps; i++) {
+        const lo = i === 0 ? 1 : Math.floor(max * i / steps) + 1;
+        const hi = Math.floor(max * (i + 1) / steps);
+        if (lo > hi) continue;
+        ranges.push({ lo, hi });
+      }
+      return ranges;
+    }
+
+    function renderHeatmapLegend(max, metric) {
+      const metricLabel = metric === "pos" ? "Positive" : metric === "neg" ? "Negative" : "Total";
+      const ranges = hmLegendRanges(max);
+      let html = `<span class="hm-legend-title">${metricLabel} · кол-во:</span>`;
+      for (const r of ranges) {
+        const mid = r.lo === r.hi ? 0 : (r.lo + r.hi) / 2;
+        const alpha = max ? (r.lo === 0 ? 0.06 : 0.08 + 0.92 * (mid / max)) : 0.06;
+        const label = r.lo === 0 && r.hi === 0 ? "0" : (r.lo === r.hi ? `${r.lo}` : `${fmt(r.lo)}–${fmt(r.hi)}`);
+        html += `<span class="hm-legend-item"><span class="hm-legend-swatch" style="background:${hmColor(metric, alpha)}"></span>${label}</span>`;
+      }
+      document.getElementById("hmLegend").innerHTML = html;
+    }
+
     function renderHeatmap() {
       const metric = state.hmMetric;
       const grid = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => ({ total: 0, pos: 0, neg: 0 })));
@@ -714,11 +759,12 @@
           const c = grid[d][h];
           const v = c[metric];
           const alpha = max ? (0.08 + 0.92 * (v / max)) : 0.06;
-          const color = metric === "pos" ? `rgba(16,185,129,${alpha})` : metric === "neg" ? `rgba(239,68,68,${alpha})` : `rgba(37,99,235,${alpha})`;
+          const color = hmColor(metric, alpha);
           html += `<div class="hm-cell" style="background:${color}" data-tip="${DOW[d]} ${h}:00 | T:${fmt(c.total)} P:${fmt(c.pos)} N:${fmt(c.neg)}"></div>`;
         }
       }
       root.innerHTML = html;
+      renderHeatmapLegend(max, metric);
       document.getElementById("hmNote").textContent = D.notes.hour_heatmap;
     }
 
