@@ -268,7 +268,32 @@
     .dot.p { background: var(--green); }
     .dot.n { background: var(--red); }
 
-    .chart-box { position: relative; height: 280px; }
+    .source-layout {
+      display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: center;
+    }
+    @media (max-width: 900px) { .source-layout { grid-template-columns: 1fr; } }
+    .source-chart { height: 300px; }
+    .source-stats { display: flex; flex-direction: column; gap: 12px; }
+    .source-stat {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-2);
+    }
+    .source-stat .dot {
+      width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+    }
+    .source-stat strong { display: block; font-size: .9rem; margin-bottom: 4px; }
+    .source-stat .num { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+    .source-stat .sub { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+    .source-ratio-wrap { margin-top: 16px; }
+    .source-ratio-label {
+      display: flex; justify-content: space-between; font-size: .75rem; color: var(--muted); margin-bottom: 6px;
+    }
+    .source-ratio {
+      display: flex; height: 16px; border-radius: 999px; overflow: hidden;
+      border: 1px solid var(--border); background: var(--surface-2);
+    }
+    .source-ratio .ext { background: linear-gradient(90deg, #f59e0b, #fb923c); min-width: 14px; }
+    .source-ratio .int { background: linear-gradient(90deg, #2563eb, #3b82f6); flex: 1; }
     .chart-box.sm { height: 230px; }
     .chart-box.lg { height: 340px; }
     .chart-scroll-wrap {
@@ -553,7 +578,11 @@
           <section class="panel" data-panel="source">
             <div class="card">
               <div class="card-head"><div><h2>По источнику</h2><p class="hint">External vs Internal</p></div></div>
-              <div class="chart-box"><canvas id="chartSource"></canvas></div>
+              <div class="source-layout">
+                <div class="chart-box source-chart"><canvas id="chartSource"></canvas></div>
+                <div id="sourceStats" class="source-stats"></div>
+              </div>
+              <div class="source-ratio-wrap" id="sourceRatioWrap"></div>
             </div>
           </section>
 
@@ -890,6 +919,41 @@
       };
     }
 
+    const SOURCE_META = {
+      external: { label: "External", color: "#f59e0b", soft: "#fff7ed" },
+      internal: { label: "Internal", color: "#2563eb", soft: "#eff6ff" },
+    };
+
+    function sourceDonutOpts(values) {
+      const sum = values.reduce((a, b) => a + b, 0) || 1;
+      return {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "56%",
+        layout: { padding: 20 },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: (ctx) => {
+              const v = ctx.dataset.data[ctx.dataIndex];
+              return v / sum < 0.06 ? "#334155" : "#ffffff";
+            },
+            font: { size: 11, weight: "700" },
+            anchor: (ctx) => (ctx.dataset.data[ctx.dataIndex] / sum < 0.06 ? "end" : "center"),
+            align: (ctx) => (ctx.dataset.data[ctx.dataIndex] / sum < 0.06 ? "end" : "center"),
+            offset: (ctx) => (ctx.dataset.data[ctx.dataIndex] / sum < 0.06 ? 10 : 2),
+            formatter: (v) => (v > 0 ? `${fmt(v)}\n${pct(v, sum)}` : ""),
+          },
+          tooltip: {
+            backgroundColor: "#0f172a",
+            padding: 12,
+            cornerRadius: 10,
+            callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)} (${pct(ctx.raw, sum)})` },
+          },
+        },
+      };
+    }
+
     function doughnutOpts() {
       return {
         responsive: true,
@@ -1094,10 +1158,54 @@
     function renderSource() {
       const map = sumRows(D.slices.facts_month, [0, 2, 3], r => D.sources[r[0]], 1);
       const entries = sortedEntries(map, 10);
+      const labels = entries.map(e => SOURCE_META[e[0]]?.label || e[0]);
+      const values = entries.map(e => e[1].total);
+      const colors = entries.map(e => SOURCE_META[e[0]]?.color || "#94a3b8");
+      const sum = values.reduce((a, b) => a + b, 0) || 1;
+      const offsets = values.map(v => (v / sum < 0.08 ? 24 : 6));
+
       upsert("chartSource", { type: "doughnut", data: {
-        labels: entries.map(e => e[0]),
-        datasets: [{ data: entries.map(e => e[1].total), backgroundColor: ["#2563eb", "#6366f1", "#0ea5e9", "#14b8a6", "#8b5cf6"] }]
-      }, options: doughnutOpts() });
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderColor: "#ffffff",
+          borderWidth: 4,
+          spacing: 3,
+          offset: offsets,
+          hoverOffset: 10,
+        }],
+      }, options: sourceDonutOpts(values) });
+
+      document.getElementById("sourceStats").innerHTML = entries.map(([key, v]) => {
+        const meta = SOURCE_META[key] || { label: key, color: "#94a3b8", soft: "#f8fafc" };
+        return `<div class="source-stat" style="background:${meta.soft}">
+          <span class="dot" style="background:${meta.color}"></span>
+          <div>
+            <strong>${meta.label}</strong>
+            <div class="num">${fmt(v.total)}</div>
+            <div class="sub">${pct(v.total, sum)} · Pos ${fmt(v.pos)} · Neg ${fmt(v.neg)}</div>
+          </div>
+        </div>`;
+      }).join("");
+
+      const extEntry = entries.find(e => e[0] === "external");
+      const intEntry = entries.find(e => e[0] === "internal");
+      const extVal = extEntry ? extEntry[1].total : 0;
+      const intVal = intEntry ? intEntry[1].total : 0;
+      const extPct = extVal / sum * 100;
+      const intPct = intVal / sum * 100;
+      const visExt = Math.max(extPct, extVal > 0 ? 3 : 0);
+      const visInt = 100 - visExt;
+      document.getElementById("sourceRatioWrap").innerHTML = `
+        <div class="source-ratio-label">
+          <span>External ${pct(extVal, sum)}</span>
+          <span>Internal ${pct(intVal, sum)}</span>
+        </div>
+        <div class="source-ratio" title="External ${fmt(extVal)} · Internal ${fmt(intVal)}">
+          <div class="ext" style="width:${visExt}%"></div>
+          <div class="int" style="width:${visInt}%"></div>
+        </div>`;
     }
 
     function renderPlatform() {
