@@ -834,6 +834,22 @@
       };
     }
 
+    function horizontalBarOpts(maxTicks = 15) {
+      const opts = chartOpts(true, maxTicks, { font: { size: 9, weight: "700" }, offset: 8 });
+      opts.datasets = { bar: { categoryPercentage: 0.52, barPercentage: 0.72 } };
+      opts.scales.y.ticks.padding = 10;
+      opts.layout = { padding: { top: 8, bottom: 8 } };
+      return opts;
+    }
+
+    function setHorizontalChartHeight(canvasId, itemCount) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const box = canvas.closest(".chart-box");
+      if (!box) return;
+      box.style.height = Math.max(400, itemCount * 58 + 110) + "px";
+    }
+
     function lineChartOpts(maxTicks = 15) {
       return {
         responsive: true,
@@ -908,14 +924,15 @@
       charts[id] = new Chart(document.getElementById(id), cfg);
     }
 
-    function tpnData(entries) {
+    function tpnData(entries, horizontal = false) {
       const showPos = state.sentiment === ALL || state.sentiment === "pos";
       const showNeg = state.sentiment === ALL || state.sentiment === "neg";
       const showTotal = state.sentiment === ALL;
+      const barThick = horizontal ? 20 : 42;
       const datasets = [];
-      if (showTotal) datasets.push({ label: "Total", data: entries.map(e => e[1].total), backgroundColor: COLORS.total, borderRadius: 8, maxBarThickness: 42 });
-      if (showPos) datasets.push({ label: "Positive", data: entries.map(e => e[1].pos), backgroundColor: COLORS.pos, borderRadius: 8, maxBarThickness: 42 });
-      if (showNeg) datasets.push({ label: "Negative", data: entries.map(e => e[1].neg), backgroundColor: COLORS.red, borderRadius: 8, maxBarThickness: 42 });
+      if (showTotal) datasets.push({ label: "Total", data: entries.map(e => e[1].total), backgroundColor: COLORS.total, borderRadius: 6, maxBarThickness: barThick });
+      if (showPos) datasets.push({ label: "Positive", data: entries.map(e => e[1].pos), backgroundColor: COLORS.pos, borderRadius: 6, maxBarThickness: barThick });
+      if (showNeg) datasets.push({ label: "Negative", data: entries.map(e => e[1].neg), backgroundColor: COLORS.red, borderRadius: 6, maxBarThickness: barThick });
       return { labels: entries.map(e => e[0]), datasets };
     }
 
@@ -1085,12 +1102,16 @@
 
     function renderPlatform() {
       const map = sumRows(D.slices.facts_month, [0, 2, 3], r => D.platforms[r[2]], 1);
-      upsert("chartPlatform", { type: "bar", data: tpnData(sortedEntries(map, 15)), options: chartOpts(true) });
+      const entries = sortedEntries(map, 15);
+      setHorizontalChartHeight("chartPlatform", entries.length);
+      upsert("chartPlatform", { type: "bar", data: tpnData(entries, true), options: horizontalBarOpts(entries.length) });
     }
 
     function renderCity() {
       const map = sumRows(D.slices.facts_month, [0, 2, 3], r => D.cities[r[3]], 1);
-      upsert("chartCity", { type: "bar", data: tpnData(sortedEntries(map, 20)), options: chartOpts(true) });
+      const entries = sortedEntries(map, 20);
+      setHorizontalChartHeight("chartCity", entries.length);
+      upsert("chartCity", { type: "bar", data: tpnData(entries, true), options: horizontalBarOpts(entries.length) });
     }
 
     function renderCategories() {
@@ -1107,7 +1128,9 @@
         </div>`).join("");
       document.getElementById("topPos").innerHTML = rankHtml(topPos, "pos");
       document.getElementById("topNeg").innerHTML = rankHtml(topNeg, "neg");
-      upsert("chartCategory", { type: "bar", data: tpnData(sortedEntries(map, 12)), options: chartOpts(true) });
+      const catEntries = sortedEntries(map, 12);
+      setHorizontalChartHeight("chartCategory", catEntries.length);
+      upsert("chartCategory", { type: "bar", data: tpnData(catEntries, true), options: horizontalBarOpts(catEntries.length) });
     }
 
     function aggregateDetailMap(view) {
