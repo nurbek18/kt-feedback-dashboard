@@ -727,7 +727,7 @@
       date: { label: "Даты", slice: "facts_date", keyIdx: 1, layout: [0, 2, 3], nameFn: r => D.dates[r[1]], dateIdx: 1, dateKind: "date", sort: "time" },
     };
 
-    const COLORS = { total: "#2563eb", pos: "#10b981", neg: "#ef4444" };
+    const COLORS = { total: "#2563eb", pos: "#10b981", neg: "#ef4444", red: "#ef4444" };
     const DOW = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
     const maxDate = [...D.dates].sort().at(-1) || "2026-12-31";
 
@@ -860,12 +860,35 @@
 
     function labelFmt(v) { return v > 0 ? fmt(v) : ""; }
 
+    function barLabelColor(ctx) {
+      const lbl = ctx.dataset.label;
+      if (lbl === "Positive") return COLORS.pos;
+      if (lbl === "Negative") return COLORS.neg;
+      return COLORS.total;
+    }
+
+    function verticalBarLabelCfg(extra = {}) {
+      return {
+        align: "end",
+        anchor: "end",
+        rotation: -35,
+        offset: 4,
+        clip: false,
+        font: { size: 8, weight: "700" },
+        display: (ctx) => Number(ctx.dataset.data[ctx.dataIndex] || 0) > 0,
+        color: barLabelColor,
+        formatter: (v) => labelFmt(v),
+        ...extra,
+      };
+    }
+
     function chartOpts(horizontal = false, maxTicks = 12, labelCfg = {}) {
       const dl = {
         display: (ctx) => Number(ctx.dataset.data[ctx.dataIndex] || 0) > 0,
         color: horizontal ? "#334155" : "#334155",
         font: { size: horizontal ? 10 : 10, weight: "700" },
         formatter: (v) => labelFmt(v),
+        clip: false,
         ...labelCfg,
       };
       if (horizontal) {
@@ -875,12 +898,16 @@
       } else {
         dl.anchor = "end";
         dl.align = "top";
-        dl.offset = 2;
+        dl.offset = 4;
+        dl.rotation = -35;
+        dl.color = barLabelColor;
       }
       return {
         responsive: true,
         maintainAspectRatio: false,
         indexAxis: horizontal ? "y" : "x",
+        layout: horizontal ? undefined : { padding: { top: 42, right: 12, bottom: 6, left: 8 } },
+        datasets: horizontal ? undefined : { bar: { categoryPercentage: 0.48, barPercentage: 0.68 } },
         plugins: {
           legend: {
             position: "bottom",
@@ -912,12 +939,21 @@
             border: { color: "#e2e8f0" },
           },
           y: {
+            grace: horizontal ? undefined : "12%",
             ticks: { color: "#94a3b8", font: { size: 11 } },
             grid: { color: "#eef2f7" },
             border: { color: "#e2e8f0" },
           },
         },
       };
+    }
+
+    function yearChartOpts() {
+      const opts = chartOpts();
+      opts.layout = { padding: { top: 48, right: 16, bottom: 8, left: 10 } };
+      opts.scales.y.grace = "14%";
+      opts.datasets = { bar: { categoryPercentage: 0.42, barPercentage: 0.62 } };
+      return opts;
     }
 
     function horizontalBarOpts(maxTicks = 15) {
@@ -1036,13 +1072,10 @@
     }
 
     function denseBarOpts(maxTicks = 18, showLegend = true) {
-      const opts = chartOpts(false, maxTicks, {
-        align: "end",
-        anchor: "end",
-        rotation: -90,
-        font: { size: 8, weight: "700" },
-        display: (ctx) => ctx.datasetIndex === 0 && Number(ctx.dataset.data[ctx.dataIndex] || 0) > 0,
-      });
+      const opts = chartOpts(false, maxTicks, verticalBarLabelCfg({ font: { size: 7, weight: "700" } }));
+      opts.datasets = { bar: { categoryPercentage: 0.82, barPercentage: 0.58 } };
+      opts.layout = { padding: { top: 50, right: 14, bottom: 8, left: 10 } };
+      opts.scales.y.grace = "10%";
       if (!showLegend) opts.plugins.legend.display = false;
       return opts;
     }
@@ -1090,19 +1123,14 @@
     }
 
     function scrollBarOpts(itemCount, showLegend = false) {
-      const opts = chartOpts(false, itemCount, {
-        align: "end",
-        anchor: "end",
-        rotation: -90,
-        font: { size: 8, weight: "700" },
-        display: (ctx) => ctx.datasetIndex === 0 && Number(ctx.dataset.data[ctx.dataIndex] || 0) > 0,
-      });
+      const opts = chartOpts(false, itemCount, verticalBarLabelCfg());
       opts.scales.x.ticks.autoSkip = false;
       opts.scales.x.ticks.maxTicksLimit = itemCount;
       opts.scales.x.ticks.maxRotation = 0;
       opts.scales.x.ticks.font = { size: 10 };
-      opts.datasets = { bar: { categoryPercentage: 0.65, barPercentage: 0.78 } };
-      opts.layout = { padding: { top: 36, right: 16, bottom: 8, left: 12 } };
+      opts.datasets = { bar: { categoryPercentage: 0.82, barPercentage: 0.58 } };
+      opts.layout = { padding: { top: 52, right: 18, bottom: 8, left: 12 } };
+      opts.scales.y.grace = "10%";
       Object.assign(opts, fixedChartLayout());
       opts.plugins.legend.display = showLegend;
       return opts;
@@ -1125,16 +1153,32 @@
       charts[id] = new Chart(document.getElementById(id), cfg);
     }
 
-    function tpnData(entries, horizontal = false) {
+    function tpnDatasetCount() {
       const showPos = state.sentiment === ALL || state.sentiment === "pos";
       const showNeg = state.sentiment === ALL || state.sentiment === "neg";
       const showTotal = state.sentiment === ALL;
-      const barThick = horizontal ? 20 : 42;
+      return (showTotal ? 1 : 0) + (showPos ? 1 : 0) + (showNeg ? 1 : 0);
+    }
+
+    function tpnData(entries, horizontal = false, scrollGrouped = false) {
+      const showPos = state.sentiment === ALL || state.sentiment === "pos";
+      const showNeg = state.sentiment === ALL || state.sentiment === "neg";
+      const showTotal = state.sentiment === ALL;
+      const barThick = horizontal ? 20 : (scrollGrouped ? 34 : 42);
+      const barExtra = scrollGrouped
+        ? { borderWidth: 2, borderColor: "#ffffff", borderSkipped: false, borderRadius: 5 }
+        : { borderRadius: 6 };
       const datasets = [];
-      if (showTotal) datasets.push({ label: "Total", data: entries.map(e => e[1].total), backgroundColor: COLORS.total, borderRadius: 6, maxBarThickness: barThick });
-      if (showPos) datasets.push({ label: "Positive", data: entries.map(e => e[1].pos), backgroundColor: COLORS.pos, borderRadius: 6, maxBarThickness: barThick });
-      if (showNeg) datasets.push({ label: "Negative", data: entries.map(e => e[1].neg), backgroundColor: COLORS.red, borderRadius: 6, maxBarThickness: barThick });
+      if (showTotal) datasets.push({ label: "Total", data: entries.map(e => e[1].total), backgroundColor: COLORS.total, maxBarThickness: barThick, ...barExtra });
+      if (showPos) datasets.push({ label: "Positive", data: entries.map(e => e[1].pos), backgroundColor: COLORS.pos, maxBarThickness: barThick, ...barExtra });
+      if (showNeg) datasets.push({ label: "Negative", data: entries.map(e => e[1].neg), backgroundColor: COLORS.neg, maxBarThickness: barThick, ...barExtra });
       return { labels: entries.map(e => e[0]), datasets };
+    }
+
+    function scrollPerItem(baseThree, baseOne, datasetCount) {
+      if (datasetCount >= 3) return baseThree;
+      if (datasetCount === 2) return Math.round((baseThree + baseOne) / 2);
+      return baseOne;
     }
 
     function globalTotals() {
@@ -1183,16 +1227,18 @@
       const datesShown = sortedEntries(sumRows(D.slices.facts_date, [0, 2, 3], r => D.dates[r[1]], 1, "date"), 200)
         .sort((a,b) => a[0].localeCompare(b[0])).slice(-dayWindow());
 
-      upsert("chartYear", { type: "bar", data: tpnData([...yearMap.entries()].sort((a,b) => a[0].localeCompare(b[0]))), options: chartOpts() });
+      upsert("chartYear", { type: "bar", data: tpnData([...yearMap.entries()].sort((a,b) => a[0].localeCompare(b[0]))), options: yearChartOpts() });
 
-      const monthPerItem = state.sentiment === ALL ? 128 : 80;
-      const monthH = 300;
-      upsertScroll("chartMonth", { type: "bar", data: tpnData(monthsShown), options: scrollBarOpts(monthsShown.length) }, "chartMonthInner", monthsShown.length, monthPerItem, monthH);
+      const monthData = tpnData(monthsShown, false, true);
+      const monthPerItem = scrollPerItem(172, 96, tpnDatasetCount());
+      const monthH = 320;
+      upsertScroll("chartMonth", { type: "bar", data: monthData, options: scrollBarOpts(monthsShown.length) }, "chartMonthInner", monthsShown.length, monthPerItem, monthH);
 
-      const datePerItem = state.sentiment === ALL ? 56 : 40;
-      const dateH = 300;
       const dateEntries = datesShown.map(([d, v]) => [d.slice(5), v]);
-      upsertScroll("chartDate", { type: "bar", data: tpnData(dateEntries), options: scrollBarOpts(dateEntries.length) }, "chartDateInner", dateEntries.length, datePerItem, dateH);
+      const dateData = tpnData(dateEntries, false, true);
+      const datePerItem = scrollPerItem(132, 80, tpnDatasetCount());
+      const dateH = 320;
+      upsertScroll("chartDate", { type: "bar", data: dateData, options: scrollBarOpts(dateEntries.length) }, "chartDateInner", dateEntries.length, datePerItem, dateH);
     }
 
     function hmColor(metric, alpha) {
@@ -1299,10 +1345,12 @@
       const showPos = state.sentiment === ALL || state.sentiment === "pos";
       const showNeg = state.sentiment === ALL || state.sentiment === "neg";
       const showTotal = state.sentiment === ALL;
+      const barExtra = { borderWidth: 2, borderColor: "#ffffff", borderSkipped: false, borderRadius: 5, maxBarThickness: 34 };
       const datasets = [];
-      if (showTotal) datasets.push({ label: "Total", data: entries.map(e => e[1].total), backgroundColor: COLORS.total, borderRadius: 4, maxBarThickness: 22 });
-      if (showPos) datasets.push({ label: "Positive", data: entries.map(e => e[1].pos), backgroundColor: COLORS.pos, borderRadius: 4, maxBarThickness: 22 });
-      if (showNeg) datasets.push({ label: "Negative", data: entries.map(e => e[1].neg), backgroundColor: COLORS.red, borderRadius: 4, maxBarThickness: 22 });
+      if (showTotal) datasets.push({ label: "Total", data: entries.map(e => e[1].total), backgroundColor: COLORS.total, ...barExtra });
+      if (showPos) datasets.push({ label: "Positive", data: entries.map(e => e[1].pos), backgroundColor: COLORS.pos, ...barExtra });
+      if (showNeg) datasets.push({ label: "Negative", data: entries.map(e => e[1].neg), backgroundColor: COLORS.neg, ...barExtra });
+      const datasetCount = datasets.length;
 
       const leg = document.getElementById("dateHourLegend");
       if (leg) {
@@ -1315,7 +1363,7 @@
       if (foot) foot.textContent = `Колёсико мыши — горизонтальная прокрутка · на столбцах: ${metricName}`;
 
       const dhH = 360;
-      const dhPerItem = 26;
+      const dhPerItem = scrollPerItem(58, 40, datasetCount);
       upsertScroll("chartDateHour", { type: "bar", data: { labels, datasets }, options: (() => { const o = denseBarOpts(24, false); Object.assign(o, fixedChartLayout()); return o; })() }, "chartDateHourInner", labels.length, dhPerItem, dhH);
       document.getElementById("dateHourHint").textContent =
         `Почасовая детализация · последние ${dayWin} дн. · ${labels.length} столбцов`;
