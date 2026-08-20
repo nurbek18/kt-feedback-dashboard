@@ -772,7 +772,7 @@
       return [...map.entries()].sort((a, b) => b[1][sortKey] - a[1][sortKey]).slice(0, limit);
     }
 
-    function labelFmt(v) { return v > 0 ? compactNum(v) : ""; }
+    function labelFmt(v) { return v > 0 ? fmt(v) : ""; }
 
     function chartOpts(horizontal = false, maxTicks = 12, labelCfg = {}) {
       const dl = {
@@ -885,7 +885,7 @@
             font: { size: 12, weight: "700" },
             formatter: (v, ctx) => {
               const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
-              return v > 0 ? `${compactNum(v)}\n${pct(v, sum)}` : "";
+              return v > 0 ? `${fmt(v)}\n${pct(v, sum)}` : "";
             },
           },
           tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.raw)}` } },
