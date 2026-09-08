@@ -4,9 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KT Feedback Dashboard</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="vendor/chart.umd.min.js"></script>
+  <script src="vendor/chartjs-plugin-datalabels.min.js"></script>
   <style>
     :root {
       --sidebar: #0b1220;
@@ -1582,7 +1581,7 @@
       if (typeof Chart === "undefined") {
         const loader = document.getElementById("pageLoader");
         if (loader) loader.hidden = true;
-        document.body.innerHTML = "<div style='padding:24px;font-family:Inter,sans-serif'>Chart.js не загрузился. Проверьте доступ к cdn.jsdelivr.net и обновите страницу.</div>";
+        document.body.innerHTML = "<div style='padding:24px;font-family:system-ui,sans-serif'>Chart.js не загрузился. Обновите страницу или откройте dashboard вне корпоративной сети.</div>";
         return;
       }
       if (window.ChartDataLabels) Chart.register(ChartDataLabels);
