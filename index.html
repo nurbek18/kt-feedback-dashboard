@@ -486,9 +486,24 @@
       .workspace { grid-template-columns: 1fr; }
       .filter-panel { border-left: none; border-top: 1px solid var(--border); }
     }
+    .page-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px;
+      background: #eef2f8; color: #0f172a; font-weight: 600;
+    }
+    .page-loader[hidden] { display: none !important; }
+    .page-loader .spin {
+      width: 42px; height: 42px; border: 4px solid #cbd5e1; border-top-color: #2563eb;
+      border-radius: 50%; animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+  <div id="pageLoader" class="page-loader">
+    <div class="spin"></div>
+    <div>Загрузка dashboard… (~3 MB, подождите 10–30 сек)</div>
+  </div>
   <div class="app">
     <aside class="sidebar">
       <div class="brand">
@@ -1564,6 +1579,12 @@
     }
 
     function init() {
+      if (typeof Chart === "undefined") {
+        const loader = document.getElementById("pageLoader");
+        if (loader) loader.hidden = true;
+        document.body.innerHTML = "<div style='padding:24px;font-family:Inter,sans-serif'>Chart.js не загрузился. Проверьте доступ к cdn.jsdelivr.net и обновите страницу.</div>";
+        return;
+      }
       if (window.ChartDataLabels) Chart.register(ChartDataLabels);
       const hashTab = location.hash.replace("#", "");
       if (hashTab && TAB_META[hashTab]) state.tab = hashTab;
@@ -1656,7 +1677,10 @@
       };
       setTab(state.tab);
       bindDateHourScroll();
-      renderAll();
+      requestAnimationFrame(() => {
+        try { renderAll(); }
+        finally { document.getElementById("pageLoader").hidden = true; }
+      });
     }
     init();
   </script>
