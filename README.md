@@ -6,6 +6,16 @@ Interactive HTML dashboard for **external** (public reviews) and **internal** (c
 
 **https://nurbek18.github.io/kt-feedback-dashboard/**
 
+## Pages
+
+| URL | Purpose |
+|-----|---------|
+| [index.html](index.html) | Charts & KPIs (analytics) |
+| [records.html](records.html) | **Back-office** row detalization (like Qlik): date, source, sentiment, region, platform, category, topic, text |
+| [detail.html](detail.html) | Aggregated pivot tables |
+
+Row data: `data/rows_external.json` (all external) + `data/rows_internal.json` (latest 25k sample of 2.19M internal).
+
 ## Features
 
 - **Time dimensions:** year, period (month), date

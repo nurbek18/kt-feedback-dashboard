@@ -90,8 +90,13 @@
     .nav-icon {
       width: 20px; height: 20px; opacity: .9; flex-shrink: 0;
     }
+    .admin-link-wrap { margin-top: auto; padding: 10px 12px 0; }
+    .admin-link {
+      display: block; padding: 10px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
+      color: #e2e8f0; text-decoration: none; background: rgba(59,130,246,.15); border: 1px solid rgba(59,130,246,.35);
+    }
+    .admin-link:hover { background: rgba(59,130,246,.28); color: #fff; }
     .sidebar-foot {
-      margin-top: auto;
       padding: 14px 10px 6px;
       border-top: 1px solid rgba(255,255,255,.08);
     }
@@ -513,6 +518,9 @@
         </div>
       </div>
       <nav class="nav" id="tabs"></nav>
+      <div class="admin-link-wrap">
+        <a class="admin-link" href="records.html">Детализация обращений →</a>
+      </div>
       <div class="sidebar-foot">
         <div class="user-card">
           <div class="avatar">KT</div>

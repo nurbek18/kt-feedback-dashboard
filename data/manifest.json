@@ -1,0 +1,9 @@
+{
+  "external_rows": 13766,
+  "internal_total": 2191434,
+  "internal_sample": 25000,
+  "files": [
+    "rows_external.json",
+    "rows_internal.json"
+  ]
+}
