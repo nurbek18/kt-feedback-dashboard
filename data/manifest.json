@@ -1,9 +1,112 @@
 {
+  "mode": "full_chunked",
   "external_rows": 13766,
   "internal_total": 2191434,
-  "internal_sample": 25000,
+  "internal_chunks": [
+    {
+      "file": "internal_chunks/chunk-0001.json",
+      "rows": 160000,
+      "global_start": 0,
+      "global_end": 159999,
+      "size_mb": 76.33
+    },
+    {
+      "file": "internal_chunks/chunk-0002.json",
+      "rows": 160000,
+      "global_start": 160000,
+      "global_end": 319999,
+      "size_mb": 78.22
+    },
+    {
+      "file": "internal_chunks/chunk-0003.json",
+      "rows": 160000,
+      "global_start": 320000,
+      "global_end": 479999,
+      "size_mb": 77.27
+    },
+    {
+      "file": "internal_chunks/chunk-0004.json",
+      "rows": 160000,
+      "global_start": 480000,
+      "global_end": 639999,
+      "size_mb": 77.0
+    },
+    {
+      "file": "internal_chunks/chunk-0005.json",
+      "rows": 160000,
+      "global_start": 640000,
+      "global_end": 799999,
+      "size_mb": 76.48
+    },
+    {
+      "file": "internal_chunks/chunk-0006.json",
+      "rows": 160000,
+      "global_start": 800000,
+      "global_end": 959999,
+      "size_mb": 76.45
+    },
+    {
+      "file": "internal_chunks/chunk-0007.json",
+      "rows": 160000,
+      "global_start": 960000,
+      "global_end": 1119999,
+      "size_mb": 77.63
+    },
+    {
+      "file": "internal_chunks/chunk-0008.json",
+      "rows": 160000,
+      "global_start": 1120000,
+      "global_end": 1279999,
+      "size_mb": 78.14
+    },
+    {
+      "file": "internal_chunks/chunk-0009.json",
+      "rows": 160000,
+      "global_start": 1280000,
+      "global_end": 1439999,
+      "size_mb": 80.9
+    },
+    {
+      "file": "internal_chunks/chunk-0010.json",
+      "rows": 160000,
+      "global_start": 1440000,
+      "global_end": 1599999,
+      "size_mb": 80.43
+    },
+    {
+      "file": "internal_chunks/chunk-0011.json",
+      "rows": 160000,
+      "global_start": 1600000,
+      "global_end": 1759999,
+      "size_mb": 79.83
+    },
+    {
+      "file": "internal_chunks/chunk-0012.json",
+      "rows": 160000,
+      "global_start": 1760000,
+      "global_end": 1919999,
+      "size_mb": 79.9
+    },
+    {
+      "file": "internal_chunks/chunk-0013.json",
+      "rows": 160000,
+      "global_start": 1920000,
+      "global_end": 2079999,
+      "size_mb": 80.32
+    },
+    {
+      "file": "internal_chunks/chunk-0014.json",
+      "rows": 111434,
+      "global_start": 2080000,
+      "global_end": 2191433,
+      "size_mb": 56.74
+    }
+  ],
+  "chunk_rows_max": 160000,
+  "page_size": 100,
   "files": [
     "rows_external.json",
-    "rows_internal.json"
-  ]
+    "internal_chunks/chunk-*.json"
+  ],
+  "notes": "Full internal on web via lazy chunk load; text truncated for size."
 }

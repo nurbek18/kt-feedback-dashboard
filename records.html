@@ -6,17 +6,9 @@
   <title>KT Feedback — Детализация обращений</title>
   <style>
     :root {
-      --bg: #0f1419;
-      --sidebar: #111827;
-      --surface: #1a2332;
-      --surface2: #243044;
-      --border: #334155;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --accent: #3b82f6;
-      --pos: #34d399;
-      --neg: #f87171;
-      --neu: #fbbf24;
+      --bg: #0f1419; --sidebar: #111827; --surface: #1a2332; --surface2: #243044;
+      --border: #334155; --text: #f1f5f9; --muted: #94a3b8; --accent: #3b82f6;
+      --pos: #34d399; --neg: #f87171; --neu: #fbbf24;
     }
     * { box-sizing: border-box; }
     body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -25,54 +17,51 @@
       background: var(--sidebar); border-right: 1px solid var(--border); padding: 20px 14px;
       display: flex; flex-direction: column; gap: 8px;
     }
-    .brand { font-weight: 700; font-size: 15px; padding: 8px 10px; color: #fff; }
+    .brand { font-weight: 700; font-size: 15px; padding: 8px 10px; }
     .brand span { display: block; font-size: 11px; color: var(--muted); font-weight: 500; margin-top: 4px; }
     .nav a {
       display: block; padding: 10px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; font-size: 13px;
     }
     .nav a:hover { background: var(--surface2); color: var(--text); }
     .nav a.active { background: var(--accent); color: #fff; }
-    main { padding: 20px 24px 32px; overflow: hidden; display: flex; flex-direction: column; gap: 16px; }
-    .topbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    main { padding: 20px 24px 32px; overflow: hidden; display: flex; flex-direction: column; gap: 16px; min-height: 0; }
+    .topbar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
     h1 { margin: 0; font-size: 20px; }
-    .hint { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .hint { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 720px; }
     .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-    select, input[type="search"] {
+    select, input[type="search"], input[type="number"] {
       background: var(--surface); border: 1px solid var(--border); color: var(--text);
       border-radius: 8px; padding: 8px 10px; font-size: 13px;
     }
-    input[type="search"] { min-width: 220px; }
+    input[type="search"] { min-width: 200px; }
     .badge { font-size: 12px; color: var(--muted); }
     .table-wrap {
-      flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+      flex: 1; min-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
     }
     table { width: 100%; border-collapse: collapse; font-size: 12px; }
     thead { position: sticky; top: 0; z-index: 2; background: #1e293b; }
     th { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    th .col-filter { display: block; margin-top: 6px; width: 100%; max-width: 140px; padding: 4px 6px; font-size: 11px; }
+    th .col-filter { display: block; margin-top: 6px; width: 100%; max-width: 130px; padding: 4px 6px; font-size: 11px; }
     td { padding: 8px; border-bottom: 1px solid #2a3548; vertical-align: top; }
     td.text { max-width: 420px; line-height: 1.4; color: #e2e8f0; }
     tr:hover td { background: rgba(59, 130, 246, 0.08); }
     .sent-pos { color: var(--pos); font-weight: 600; }
     .sent-neg { color: var(--neg); font-weight: 600; }
     .sent-neu { color: var(--neu); }
-    .pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+    .pager { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; }
     .pager button {
       background: var(--surface2); border: 1px solid var(--border); color: var(--text);
       border-radius: 8px; padding: 6px 12px; cursor: pointer;
     }
     .pager button:disabled { opacity: 0.4; cursor: default; }
-    #loadStatus { color: var(--muted); font-size: 13px; }
-    @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; }
-      .sidebar { flex-direction: row; flex-wrap: wrap; }
-    }
+    #loadStatus { color: var(--muted); font-size: 13px; min-height: 1.2em; }
+    .warn { color: #fbbf24; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">KT Feedback<span>Back-office</span></div>
+      <div class="brand">KT Feedback<span>Back-office · полная детализация</span></div>
       <nav class="nav">
         <a href="index.html">← Аналитика</a>
         <a href="records.html" class="active">Детализация обращений</a>
@@ -84,16 +73,20 @@
         <div>
           <h1>Детализация обращений</h1>
           <p class="hint" id="metaHint">Загрузка…</p>
+          <p class="warn" id="modeHint"></p>
         </div>
         <div class="toolbar">
           <label class="badge">Источник
             <select id="fSource">
-              <option value="all">Все</option>
+              <option value="all">Все (в пределах фильтра)</option>
               <option value="external">OUTSOURCE</option>
               <option value="internal">INSOURCE</option>
             </select>
           </label>
-          <input type="search" id="globalSearch" placeholder="Поиск по тексту…" />
+          <label class="badge" id="chunkWrap" hidden>Фрагмент INSOURCE
+            <select id="fChunk"></select>
+          </label>
+          <input type="search" id="globalSearch" placeholder="Поиск по тексту (текущий фрагмент)…" />
         </div>
       </div>
       <div id="loadStatus"></div>
@@ -123,7 +116,11 @@
   </div>
   <script>
     const PAGE = 100;
-    let allRows = [];
+    let manifest = null;
+    let externalRows = [];
+    let internalChunkRows = [];
+    let internalChunkCache = new Map();
+    let activeChunkIndex = 0;
     let filtered = [];
     let page = 0;
     const colFilters = {};
@@ -135,31 +132,76 @@
       return "sent-neu";
     }
 
-    async function loadData() {
-      const status = document.getElementById("loadStatus");
-      status.textContent = "Загрузка данных…";
-      const [ext, intWrap] = await Promise.all([
-        fetch("data/rows_external.json").then(r => r.json()),
-        fetch("data/rows_internal.json").then(r => r.json()),
-      ]);
-      const intRows = intWrap.rows || [];
-      allRows = ext.concat(intRows);
-      document.getElementById("metaHint").textContent =
-        `OUTSOURCE ${ext.length.toLocaleString()} · INSOURCE ${intWrap.meta?.sample_size?.toLocaleString() || intRows.length} из ${(intWrap.meta?.total_internal || intRows.length).toLocaleString()} (веб-выборка)`;
-      status.textContent = "";
-      applyFilters();
+    function currentPool() {
+      const src = document.getElementById("fSource").value;
+      if (src === "external") return externalRows;
+      if (src === "internal") return internalChunkRows;
+      return externalRows.concat(internalChunkRows);
+    }
+
+    async function loadManifest() {
+      manifest = await fetch("data/manifest.json").then(r => r.json());
+      const hint = document.getElementById("metaHint");
+      const mode = document.getElementById("modeHint");
+      if (manifest.mode === "full_chunked") {
+        hint.textContent =
+          `OUTSOURCE ${manifest.external_rows.toLocaleString()} (все) · INSOURCE ${manifest.internal_total.toLocaleString()} (все, ${manifest.internal_chunks.length} файлов на GitHub)`;
+        mode.textContent =
+          "INSOURCE: выберите фрагмент или «Все фрагменты» — данные подгружаются по частям (~160k строк). Поиск работает в загруженных фрагментах.";
+        document.getElementById("chunkWrap").hidden = false;
+        const sel = document.getElementById("fChunk");
+        sel.innerHTML =
+          `<option value="all">Все фрагменты (по очереди)</option>` +
+          manifest.internal_chunks.map((c, i) =>
+            `<option value="${i}">${i + 1}: строки ${c.global_start + 1}–${c.global_end + 1} (${c.rows.toLocaleString()})</option>`
+          ).join("");
+      } else {
+        hint.textContent = `OUTSOURCE ${manifest.external_rows.toLocaleString()} · INSOURCE sample`;
+        mode.textContent = "Полная INSOURCE на сайте не опубликована — запустите build_dashboard_rows.py --full-internal";
+      }
+    }
+
+    async function loadExternal() {
+      externalRows = await fetch("data/rows_external.json").then(r => r.json());
+    }
+
+    async function loadInternalChunk(index) {
+      if (internalChunkCache.has(index)) return internalChunkCache.get(index);
+      const c = manifest.internal_chunks[index];
+      document.getElementById("loadStatus").textContent = `Загрузка ${c.file}…`;
+      const rows = await fetch("data/" + c.file).then(r => r.json());
+      internalChunkCache.set(index, rows);
+      document.getElementById("loadStatus").textContent = "";
+      return rows;
+    }
+
+    async function refreshInternalPool() {
+      if (manifest.mode !== "full_chunked") {
+        const wrap = await fetch("data/rows_internal.json").then(r => r.json());
+        internalChunkRows = wrap.rows || [];
+        return;
+      }
+      const sel = document.getElementById("fChunk").value;
+      if (sel === "all") {
+        internalChunkRows = [];
+        for (let i = 0; i < manifest.internal_chunks.length; i++) {
+          const part = await loadInternalChunk(i);
+          internalChunkRows = internalChunkRows.concat(part);
+        }
+      } else {
+        activeChunkIndex = Number(sel);
+        internalChunkRows = await loadInternalChunk(activeChunkIndex);
+      }
     }
 
     function applyFilters() {
-      const src = document.getElementById("fSource").value;
       const q = (document.getElementById("globalSearch").value || "").toLowerCase().trim();
-      filtered = allRows.filter(r => {
-        if (src !== "all" && r.source !== src) return false;
+      const pool = currentPool();
+      filtered = pool.filter(r => {
         if (q && !(r.text || "").toLowerCase().includes(q)) return false;
         for (const [col, val] of Object.entries(colFilters)) {
           if (!val) continue;
-          const cell = String(r[col] || "").toLowerCase();
-          if (!cell.includes(val.toLowerCase())) return false;
+          if (!String(r[col] || "").toLowerCase().includes(val.toLowerCase())) return false;
         }
         return true;
       });
@@ -170,8 +212,7 @@
     function render() {
       const start = page * PAGE;
       const slice = filtered.slice(start, start + PAGE);
-      const tb = document.getElementById("tbody");
-      tb.innerHTML = slice.map(r => `
+      document.getElementById("tbody").innerHTML = slice.map(r => `
         <tr>
           <td>${r.date || ""}</td>
           <td>${r.source_label || ""}</td>
@@ -184,7 +225,7 @@
         </tr>`).join("") || "<tr><td colspan='8'>Нет строк</td></tr>";
       const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
       document.getElementById("pageInfo").textContent =
-        `${filtered.length.toLocaleString()} строк · стр. ${page + 1} / ${pages}`;
+        `Показано ${filtered.length.toLocaleString()} строк · стр. ${page + 1} / ${pages}`;
       document.getElementById("prevBtn").disabled = page <= 0;
       document.getElementById("nextBtn").disabled = page >= pages - 1;
     }
@@ -195,16 +236,38 @@
         applyFilters();
       });
     });
-    document.getElementById("fSource").onchange = applyFilters;
+    document.getElementById("fSource").onchange = async () => {
+      document.getElementById("loadStatus").textContent = "Обновление…";
+      if (document.getElementById("fSource").value !== "external") await refreshInternalPool();
+      applyFilters();
+      document.getElementById("loadStatus").textContent = "";
+    };
+    document.getElementById("fChunk").onchange = async () => {
+      document.getElementById("loadStatus").textContent = "Загрузка фрагмента…";
+      await refreshInternalPool();
+      applyFilters();
+      document.getElementById("loadStatus").textContent = "";
+    };
     document.getElementById("globalSearch").oninput = applyFilters;
     document.getElementById("prevBtn").onclick = () => { if (page > 0) { page--; render(); } };
     document.getElementById("nextBtn").onclick = () => {
       if ((page + 1) * PAGE < filtered.length) { page++; render(); }
     };
 
-    loadData().catch(err => {
-      document.getElementById("loadStatus").textContent = "Ошибка загрузки: " + err.message;
-    });
+    (async () => {
+      try {
+        await loadManifest();
+        await loadExternal();
+        document.getElementById("fSource").value = "external";
+        if (manifest.mode === "full_chunked") {
+          document.getElementById("fChunk").value = "0";
+        }
+        internalChunkRows = [];
+        applyFilters();
+      } catch (e) {
+        document.getElementById("loadStatus").textContent = "Ошибка: " + e.message;
+      }
+    })();
   </script>
 </body>
 </html>
