@@ -26,7 +26,7 @@ python pilot/scripts/generate_feedback_html_dashboard_v2.py
 
 | Source | Records |
 |--------|---------|
-| External | ~30,189 |
-| Internal | ~1,904,198 |
+| External | ~13,766 |
+| Internal | ~2,191,434 |
 
 Note: hour-level heatmaps use internal `start_at` timestamps; external reviews are date-only.
